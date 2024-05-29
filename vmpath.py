@@ -8,7 +8,9 @@ def extract_text_from_html(html_content):
 
     if result.returncode == 0:
         extracted_text = result.stdout.strip()
-        print(extracted_text)
+        lines_with_us = [line for line in extracted_text.split('\n') if 'us' in line]
+        for line in lines_with_us:
+            print(line)
     else:
         print("No text between quotation marks found.")
 
