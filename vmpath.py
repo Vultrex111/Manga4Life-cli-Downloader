@@ -9,8 +9,11 @@ def extract_text_from_html(html_content):
     if result.returncode == 0:
         extracted_text = result.stdout.strip()
         lines_with_us = [line for line in extracted_text.split('\n') if 'us' in line]
-        for line in lines_with_us:
-            print(line)
+        if lines_with_us:
+            mangaAddress = lines_with_us[0]
+            print(mangaAddress)
+        else:
+            print("No line containing 'us' found.")
     else:
         print("No text between quotation marks found.")
 
