@@ -59,6 +59,24 @@ def extract_text_from_url(manga_name, manga_chapter):
         print(f"An error occurred: {str(e)}")
         return None
 
+def convert_to_pdf(images_folder, output_pdf):
+    # List all the image files in the folder
+    image_files = [f for f in os.listdir(images_folder) if f.endswith('.png')]
+    
+    # Sort the image files numerically
+    image_files.sort(key=lambda f: int(re.sub('\D', '', f)))
+    
+    # Create a list of image paths
+    image_paths = [os.path.join(images_folder, f) for f in image_files]
+    
+    # Use ImageMagick's convert command to convert images to PDF
+    convert_command = ['convert'] + image_paths + [output_pdf]
+    try:
+        subprocess.run(convert_command, check=True)
+        print(f"PDF generated: {output_pdf}")
+    except subprocess.CalledProcessError as e:
+        print(f"Error generating PDF: {e}")
+
 # Example usage
 manga_name = input("Enter the manga name: ")
 chapter_number = int(input("Enter the chapter number: "))
@@ -84,9 +102,18 @@ if manga_address:
 
         # Download the image
         if not download_image(url, image_path):
+            print("Download Complete")
             break  # Exit the loop if the image download fails
 
         png_number += 1
+
+    # After downloading all images, rename them
+    for i, filename in enumerate(os.listdir(chapter_folder)):
+        os.rename(os.path.join(chapter_folder, filename), os.path.join(chapter_folder, f"{formatted_manga_name}_{chapter_number}_{i+1}.png"))
+
+    # Convert images to PDF
+    output_pdf = os.path.join(manga_folder, f"{manga_name}: Chapter: {chapter_number}.pdf")
+    convert_to_pdf(chapter_folder, output_pdf)
 else:
     print("Failed to extract manga address.")
 
