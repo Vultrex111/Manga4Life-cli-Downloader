@@ -17,10 +17,13 @@ def download_image(url, path):
                 for chunk in response.iter_content(1024):
                     file.write(chunk)
             print(f"Downloaded: {url}")
+            return True
         else:
             print(f"Failed to download {url}: Status code {response.status_code}")
+            return False
     except Exception as e:
         print(f"Error downloading {url}: {e}")
+        return False
 
 def extract_text_from_html(html_content):
     awk_command = ["awk", "-F=", '/vm\\.CurPathName/ {gsub(/"/, "", $2); if ($2 !~ /^https/) print $2}']
@@ -59,8 +62,6 @@ def extract_text_from_url(manga_name, manga_chapter):
 # Example usage
 manga_name = input("Enter the manga name: ")
 chapter_number = int(input("Enter the chapter number: "))
-start_png = 1
-end_png = 20
 
 # Create manga folder
 formatted_manga_name = manga_name.replace(" ", "-")
@@ -75,14 +76,17 @@ os.makedirs(chapter_folder, exist_ok=True)
 # Get the manga address from the HTML
 manga_address = extract_text_from_url(manga_name, chapter_number)
 if manga_address:
-    # Generate and save the URLs
-    for png_number in range(start_png, end_png + 1):
+    png_number = 1
+    while True:
         url = generate_image_url(manga_name, chapter_number, png_number, manga_address)
         image_filename = "{:03d}.png".format(png_number)
         image_path = os.path.join(chapter_folder, image_filename)
 
         # Download the image
-        download_image(url, image_path)
+        if not download_image(url, image_path):
+            break  # Exit the loop if the image download fails
+
+        png_number += 1
 else:
     print("Failed to extract manga address.")
 
