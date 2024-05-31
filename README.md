@@ -23,7 +23,13 @@ This is a Python script that allows you to download manga chapters from Manga4Li
 4. Enter the manga name when prompted.
 Enter the chapter number(s) separated by commas when prompted.
 
+Please Make your you type the correct Manga Name/Title.
+e.g jujutsu is different from jujustu
+Also if the English Name doesn't work , Check for the Japaneese name.
+e.g Instead of "My Hero Academia" use "Boku No Hero academia"
+
 The script will download the specified manga chapters and save them in separate folders.
+
 
 Notes
 
