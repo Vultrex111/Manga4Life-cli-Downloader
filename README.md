@@ -11,6 +11,7 @@ This is a Python script that allows you to download manga chapters from Manga4Li
 
 - Python 3.x
 - `requests` library (install using `pip install requests`)
+- pip install requests concurrent.futures pathlib
 - `shell'
    python manga_downloader.py
 
