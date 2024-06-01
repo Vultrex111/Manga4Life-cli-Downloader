@@ -32,6 +32,8 @@ Enter the chapter number(s) separated by commas when prompted.
 
 The script will download the specified manga chapters and save them in separate folders.
 
+this one allows for chapters with "." like 14.5
+also it saves your manga history, don't worry you can delete it after words. :)
 
 Notes
 
