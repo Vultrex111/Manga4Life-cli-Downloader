@@ -3,11 +3,12 @@ import aiohttp
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+import argparse
 
 class MangaDownloader:
     def __init__(self, manga_name):
         self.manga_name = manga_name.title()
-        self.formatted_manga_name = self.manga_name.replace(" ", "-")
+        self.formatted_manga_name = re.sub(r'\s+', '-', self.manga_name)  # Use regex to replace spaces with hyphens
         self.manga_folder = Path(self.formatted_manga_name)
         self.manga_folder.mkdir(exist_ok=True)
         self.executor = ThreadPoolExecutor()
@@ -110,23 +111,44 @@ class MangaDownloader:
             print("No download history found.")
 
 def main():
-    downloader = None
-    while True:
-        choice = input("Enter 'd' to download manga, 'h' to view history, 'q' to quit: ").strip().lower()
-        if choice == 'd':
-            manga_name = input("Enter the manga name: ")
-            input_chapters = input("Enter the chapter number(s) separated by commas: ")
-            chapters_to_download = [chapter.strip() for chapter in input_chapters.split(",")]
-            downloader = MangaDownloader(manga_name)
-            asyncio.run(downloader.download_chapters(chapters_to_download))
-        elif choice == 'h':
-            if downloader is None:
-                downloader = MangaDownloader("dummy")  # Use a dummy name to access history functionality
-            downloader.load_history()
-        elif choice == 'q':
-            break
-        else:
-            print("Invalid choice, please try again.")
+    parser = argparse.ArgumentParser(description="Manga Downloader")
+    parser.add_argument('-d', '--download', metavar='MANGA_NAME', type=str, help="Download manga chapters")
+    parser.add_argument('-c', '--chapters', metavar='CHAPTERS', type=str, help="Chapters to download, separated by commas")
+    parser.add_argument('-H', '--history', action='store_true', help="View download history")
+
+    args = parser.parse_args()
+
+    if args.download and args.chapters:
+        manga_name = args.download
+        chapters_to_download = [chapter.strip() for chapter in args.chapters.split(",")]
+        downloader = MangaDownloader(manga_name)
+        asyncio.run(downloader.download_chapters(chapters_to_download))
+    elif args.download:
+        manga_name = args.download
+        chapters_to_download = input("Enter the chapter number(s) separated by commas: ").split(',')
+        chapters_to_download = [chapter.strip() for chapter in chapters_to_download]
+        downloader = MangaDownloader(manga_name)
+        asyncio.run(downloader.download_chapters(chapters_to_download))
+    elif args.history:
+        downloader = MangaDownloader("dummy")
+        downloader.load_history()
+    else:
+        while True:
+            choice = input("Enter 'd' to download manga, 'h' to view history, 'q' to quit: ").strip().lower()
+            if choice == 'd':
+                manga_name = input("Enter the manga name: ")
+                input_chapters = input("Enter the chapter number(s) separated by commas: ")
+                chapters_to_download = [chapter.strip() for chapter in input_chapters.split(",")]
+                downloader = MangaDownloader(manga_name)
+                asyncio.run(downloader.download_chapters(chapters_to_download))
+            elif choice == 'h':
+                if downloader is None:
+                    downloader = MangaDownloader("dummy")
+                downloader.load_history()
+            elif choice == 'q':
+                break
+            else:
+                print("Invalid choice, please try again.")
 
 if __name__ == "__main__":
     main()
