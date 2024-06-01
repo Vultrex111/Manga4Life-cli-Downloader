@@ -1,4 +1,4 @@
-Sure, here's an updated `README.md` for your Manga4Life CLI Downloader, providing clear instructions for users:
+Certainly! Here's the updated `README.md` with the instructions on how to use the `search_poster.py` script:
 
 ---
 
@@ -82,10 +82,28 @@ python manga_downloader.py
 
 The script will download the specified manga chapters and save them in separate folders within a directory named after the manga title.
 
+## Search Poster Script
+
+Additionally, a script named `search_poster.py` is provided to search for posters related to manga titles. This script utilizes the `requests` library to fetch search results from various sources and processes the results to extract relevant information about posters.
+
+To use the `search_poster.py` script, follow these steps:
+
+1. Open a terminal or command prompt.
+2. Navigate to the folder where the `search_poster.py` script is located.
+3. Run the script using the following command:
+
+```sh
+python search_poster.py 'MANGA_NAME'
+```
+
+Replace `'MANGA_NAME'` with the name of the manga for which you want to search for posters.
+
+The script will search for posters related to the specified manga name and provide relevant information about the posters found.
+
 ## Features
 
 - Supports chapters with decimals, e.g., `14.5`.
-- Saves your download history in a file (`download_history.txt`).
+- Saves your download history in a file (`download_history.txt`) for successful downloads only.
 - Automatically formats manga names and chapter numbers.
 - Option to use uppercase for manga names with the `-U` flag.
 
@@ -102,4 +120,4 @@ The script will download the specified manga chapters and save them in separate 
 - You can use https://github.com/ollm/OpenComic to read the manga chapters. I recommend it. :)
 ---
 
-This README provides a comprehensive guide for users, covering installation, usage, command-line options, and troubleshooting.
+This updated README now includes instructions on how to use the `search_poster.py` script, providing users with a clear understanding of how to search for posters related to manga titles. Let me know if there's anything else you'd like to add or modify!
