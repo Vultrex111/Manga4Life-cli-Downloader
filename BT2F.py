@@ -84,8 +84,9 @@ class MangaDownloader:
                 chapter_folder.mkdir(exist_ok=True)
                 task = self.download_chapter_images(session, chapter_number, chapter_folder)
                 tasks.append(task)
-            await asyncio.gather(*tasks)
-        self.save_history(self.manga_name)
+            results = await asyncio.gather(*tasks)
+            if all(result is not None for result in results):
+                self.save_history(self.manga_name)
 
     def save_history(self, manga_name):
         if not self.history_file.exists():
