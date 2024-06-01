@@ -1,56 +1,77 @@
+Here's a revised and formatted version of your README for your GitHub page, providing clear instructions for users on how to use the script:
+
+---
+
 # Manga4Life-cli-Downloader
-Downloads manga from only Manga4Life
 
-Only download my latest commit
-
-# Manga Downloader
-
-This is a Python script that allows you to download manga chapters from Manga4Life.
+**Download manga chapters from Manga4Life easily with this script.**
 
 ## Prerequisites
 
-- Python 3.x
-- `requests` library (install using `pip install requests`)
-- pip install requests concurrent.futures pathlib
-- `shell'
-   python manga_downloader.py
+- **Python 3.x**
+- Required Python libraries:
+  - `requests` 
+  - `concurrent.futures`
+  - `pathlib`
+
+Install the required libraries using:
+
+```sh
+pip install requests concurrent.futures pathlib
+```
 
 ## Usage
 
-1. Clone or download the repository.
-2. Open a terminal or command prompt and navigate to the downloaded folder.
-3. Run the script by executing the following command:
-4. Enter the manga name when prompted.
-Enter the chapter number(s) separated by commas when prompted.
+1. **Clone or Download the Repository**:
+   - Only download the latest commit.
+   - Clone the repository using:
+     ```sh
+     git clone <repository_url>
+     ```
 
-#Usage@2
+2. **Navigate to the Downloaded Folder**:
+   - Open a terminal or command prompt and navigate to the folder where the repository is downloaded.
 
-   -Please Make your you type the correct Manga Name/Title.
-   -e.g jujutsu is different from jujustu
-   -Also if the English Name doesn't work , Check for the Japaneese name.
-   -e.g Instead of "My Hero Academia" use "Boku No Hero academia"
+3. **Run the Script**:
+   - Execute the script using the following command:
+     ```sh
+     python manga_downloader.py
+     ```
 
-The script will download the specified manga chapters and save them in separate folders.
+4. **Enter the Manga Details**:
+   - **Manga Name**: Type the correct name of the manga.
+     - Example: `Jujutsu Kaisen` is different from `JujutsuKaisen`.
+     - If the English name doesn't work, try using the Japanese name.
+     - Example: Instead of `My Hero Academia`, use `Boku No Hero Academia`.
+   - **Chapter Numbers**: Enter the chapter number(s) separated by commas.
+     - Example: `14, 15, 14.5`
 
-this one allows for chapters with "." like 14.5
-also it saves your manga history, don't worry you can delete it after words. :)
+## Example
 
-Notes
+```sh
+python manga_downloader.py
+```
 
-Make sure you have a stable internet connection while running the script.
+- **Manga Name**: `One Piece`
+- **Chapter Numbers**: `001, 002, 0014.5`
 
-The downloaded manga chapters will be saved in a folder named after the manga title.
+The script will download the specified manga chapters and save them in separate folders within a directory named after the manga title.
 
-Each chapter will be saved in a separate folder named "Chapter: XXXX" (where XXXX is the chapter number).
+## Features
 
-pip install requests concurrent.futures pathlib
+- Supports chapters with decimals, e.g., `14.5`.
+- Saves your download history in a file (`download_history.txt`).
 
-Make sure you have Python and pip installed on your system before running the command. If you don't have pip installed, you can follow the instructions in the search result snippet from ActiveState to install pip.
+## Notes
 
-Remember to run the command in the same environment where you have Python installed.
+- Ensure you have a stable internet connection while running the script.
+- The downloaded manga chapters will be saved in a folder named after the manga title.
+- Each chapter will be saved in a separate folder named `Chapter-XXXX` (where XXXX is the chapter number).
 
-Once you have installed the required libraries, you can run the code as described in the previous response.
+## Troubleshooting
 
-Note: The code provided assumes that you already have Python installed on your system. If you don't have Python installed, you will need to install it before proceeding.
+- If you encounter an issue where `vm.CurPathName` is not found, this might be due to an incorrect manga name or chapter number. Please verify that the manga name and chapter number are correct.
+- For network-related issues, ensure you have a stable internet connection.
 
-   ``
+---
+
