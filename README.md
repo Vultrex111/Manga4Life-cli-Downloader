@@ -1,4 +1,4 @@
-Here's a revised and formatted version of your README for your GitHub page, providing clear instructions for users on how to use the script:
+Sure, here's an updated `README.md` for your Manga4Life CLI Downloader, providing clear instructions for users:
 
 ---
 
@@ -10,20 +10,20 @@ Here's a revised and formatted version of your README for your GitHub page, prov
 
 - **Python 3.x**
 - Required Python libraries:
-  - `requests` 
+  - `aiohttp`
   - `concurrent.futures`
   - `pathlib`
+  - `argparse`
 
 Install the required libraries using:
 
 ```sh
-pip install requests concurrent.futures pathlib
+pip install aiohttp concurrent.futures pathlib argparse
 ```
 
 ## Usage
 
 1. **Clone or Download the Repository**:
-   - Only download the latest commit.
    - Clone the repository using:
      ```sh
      git clone <repository_url>
@@ -38,15 +38,40 @@ pip install requests concurrent.futures pathlib
      python manga_downloader.py
      ```
 
-4. **Enter the Manga Details**:
-   - **Manga Name**: Type the correct name of the manga.
-     - Example: `Jujutsu Kaisen` is different from `JujutsuKaisen`.
-     - If the English name doesn't work, try using the Japanese name.
-     - Example: Instead of `My Hero Academia`, use `Boku No Hero Academia`.
-   - **Chapter Numbers**: Enter the chapter number(s) separated by commas.
-     - Example: `14, 15, 14.5`
+### Command-Line Options
 
-## Example
+You can also use command-line arguments to specify the manga name and chapters to download:
+
+#### Download Manga Chapters
+
+```sh
+python manga_downloader.py -d 'MANGA_NAME' -c 'CHAPTERS'
+```
+
+- **Manga Name**: The name of the manga.
+  - Example: `Jujutsu Kaisen` is different from `JujutsuKaisen`.
+  - If the English name doesn't work, try using the Japanese name.
+  - Example: Instead of `My Hero Academia`, use `Boku No Hero Academia`.
+- **Chapter Numbers**: The chapter number(s) separated by commas.
+  - Example: `14, 15, 14.5`
+
+#### Use Uppercase for Manga Name
+
+If the manga name is in all uppercase, use the `-U` flag:
+
+```sh
+python manga_downloader.py -U -d 'TSUYOKI' -c '1,2,3'
+```
+
+#### View Download History
+
+```sh
+python manga_downloader.py -H
+```
+
+### Interactive Mode
+
+If you don't use the `-d` or `-c` options, the script will run in interactive mode, prompting you to enter the manga name and chapter numbers:
 
 ```sh
 python manga_downloader.py
@@ -61,6 +86,8 @@ The script will download the specified manga chapters and save them in separate 
 
 - Supports chapters with decimals, e.g., `14.5`.
 - Saves your download history in a file (`download_history.txt`).
+- Automatically formats manga names and chapter numbers.
+- Option to use uppercase for manga names with the `-U` flag.
 
 ## Notes
 
@@ -75,3 +102,4 @@ The script will download the specified manga chapters and save them in separate 
 
 ---
 
+This README provides a comprehensive guide for users, covering installation, usage, command-line options, and troubleshooting.
