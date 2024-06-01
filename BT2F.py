@@ -13,7 +13,6 @@ class MangaDownloader:
             self.manga_name = manga_name.title()
         self.formatted_manga_name = re.sub(r'\s+', '-', self.manga_name)  # Use regex to replace spaces with hyphens
         self.manga_folder = Path(self.formatted_manga_name)
-        self.manga_folder.mkdir(exist_ok=True)
         self.executor = ThreadPoolExecutor()
         self.history_file = Path("download_history.txt")
 
@@ -34,6 +33,7 @@ class MangaDownloader:
         try:
             async with session.get(url) as response:
                 if response.status == 200:
+                    path.parent.mkdir(parents=True, exist_ok=True)  # Create the folder only if the image is successfully downloaded
                     with open(path, 'wb') as file:
                         file.write(await response.read())
                     print(f"Downloaded: {url}")
@@ -73,10 +73,11 @@ class MangaDownloader:
             print(f"Error accessing {url}: {e}. This might be due to a server issue.")
             return None
 
-    async def download_chapter_images(self, session, chapter_number, chapter_folder):
+    async def download_chapter_images(self, session, chapter_number):
         formatted_chapter_number = self.format_chapter_number(chapter_number)
         manga_address = await self.extract_text_from_url(session, formatted_chapter_number)
         if manga_address:
+            chapter_folder = self.manga_folder / f"Chapter-{formatted_chapter_number}"
             png_number = 1
             while True:
                 url = await self.generate_image_url(formatted_chapter_number, png_number, manga_address)
@@ -85,7 +86,7 @@ class MangaDownloader:
                 if not await self.download_image(session, url, image_path):
                     break
                 png_number += 1
-            return True
+            return True if png_number > 1 else False  # Check if at least one image was downloaded
         else:
             return False
 
@@ -93,10 +94,7 @@ class MangaDownloader:
         async with aiohttp.ClientSession() as session:
             tasks = []
             for chapter_number in chapters_to_download:
-                chapter_folder_name = f"Chapter-{self.format_chapter_number(chapter_number)}"
-                chapter_folder = self.manga_folder / chapter_folder_name
-                chapter_folder.mkdir(exist_ok=True)
-                task = self.download_chapter_images(session, chapter_number, chapter_folder)
+                task = self.download_chapter_images(session, chapter_number)
                 tasks.append(task)
             await asyncio.gather(*tasks)
 
