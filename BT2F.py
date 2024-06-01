@@ -46,7 +46,6 @@ class MangaDownloader:
         matches = pattern.findall(html_content)
         if matches:
             return matches[0]
-        print("No line containing 'vm.CurPathName =' found.")
         return None
 
     async def extract_text_from_url(self, session, chapter_number):
@@ -56,9 +55,12 @@ class MangaDownloader:
             async with session.get(url) as response:
                 response.raise_for_status()
                 html_content = await response.text()
-                return self.extract_text_from_html(html_content)
+                manga_address = self.extract_text_from_html(html_content)
+                if not manga_address:
+                    print(f"Could not find 'vm.CurPathName' in the page. This might be due to an incorrect manga name '{self.manga_name}' or chapter number '{formatted_chapter_number}'.")
+                return manga_address
         except aiohttp.ClientError as e:
-            print(f"Error accessing {url}: {e}")
+            print(f"Error accessing {url}: {e}. This might be due to a server issue.")
             return None
 
     async def download_chapter_images(self, session, chapter_number, chapter_folder):
