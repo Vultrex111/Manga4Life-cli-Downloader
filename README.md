@@ -99,7 +99,7 @@ The script will download the specified manga chapters and save them in separate 
 
 - If you encounter an issue where `vm.CurPathName` is not found, this might be due to an incorrect manga name or chapter number. Please verify that the manga name and chapter number are correct.
 - For network-related issues, ensure you have a stable internet connection.
-
+- You can use https://github.com/ollm/OpenComic to read the manga chapters. I recommend it. :)
 ---
 
 This README provides a comprehensive guide for users, covering installation, usage, command-line options, and troubleshooting.
