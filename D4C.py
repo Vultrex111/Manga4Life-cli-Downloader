@@ -1,7 +1,7 @@
 import re
 import aiohttp
 import asyncio
-from aiofiles import open as aio_open
+import aiofiles
 from pathlib import Path
 import argparse
 import logging
@@ -33,7 +33,7 @@ class MangaDownloader:
             async with session.get(url) as response:
                 if response.status == 200:
                     path.parent.mkdir(parents=True, exist_ok=True)
-                    async with aio_open(path, 'wb') as file:
+                    async with aiofiles.open(path, 'wb') as file:
                         await file.write(await response.read())
                     logging.info(f"Downloaded: {url}")
                     return True
@@ -74,21 +74,14 @@ class MangaDownloader:
         manga_address = await self.extract_text_from_url(session, formatted_chapter_number)
         if manga_address:
             chapter_folder = self.manga_folder / f"Chapter-{formatted_chapter_number}"
-            tasks = []
             png_number = 1
             while True:
                 url = await self.generate_image_url(formatted_chapter_number, png_number, manga_address)
                 image_filename = f"{png_number:03d}.png"
                 image_path = chapter_folder / image_filename
-                tasks.append(self.download_image(session, url, image_path))
+                if not await self.download_image(session, url, image_path):
+                    break
                 png_number += 1
-                if len(tasks) >= 10:  # Download images in batches
-                    results = await asyncio.gather(*tasks)
-                    if not any(results):
-                        break
-                    tasks = []
-            if tasks:
-                await asyncio.gather(*tasks)
             return png_number > 1
         else:
             return False
@@ -96,23 +89,29 @@ class MangaDownloader:
     async def download_chapters(self, chapters_to_download: list):
         conn = aiohttp.TCPConnector(limit=10)
         async with aiohttp.ClientSession(connector=conn) as session:
-            tasks = [self.download_chapter_images(session, chapter_number) for chapter_number in chapters_to_download]
-            await asyncio.gather(*tasks)
+            tasks = []
+            for chapter_number in chapters_to_download:
+                tasks.append(self.download_chapter_images(session, chapter_number))
+                if len(tasks) >= 5:  # Limit concurrent tasks to avoid overloading
+                    await asyncio.gather(*tasks)
+                    tasks = []
+            if tasks:
+                await asyncio.gather(*tasks)
 
     async def save_history(self, manga_name: str):
         if not self.history_file.exists():
             self.history_file.touch()
-        async with aio_open(self.history_file, 'a+') as file:
+        async with aiofiles.open(self.history_file, 'a+') as file:
             await file.seek(0)
             history = await file.read()
             history_lines = history.splitlines()
             if manga_name not in history_lines:
-                await file.write(manga_name + '\n')
+                await file.write(manga_name + "\n")
                 logging.info(f"Saved {manga_name} to history.")
 
     async def load_history(self):
         if self.history_file.exists():
-            async with aio_open(self.history_file, 'r') as file:
+            async with aiofiles.open(self.history_file, 'r') as file:
                 history = await file.read()
                 history_lines = history.splitlines()
                 logging.info("Download History:")
@@ -169,5 +168,5 @@ def main():
 if __name__ == "__main__":
     main()
 
-#Also if you're reading this in the future, Thanks :) for trying out my code. It took hardwork, dedication, and most importantly GOD for this to be possible.
+ #Also if you're reading this in the future, Thanks :) for trying out my code. It took hardwork, dedication, and most importantly GOD for this to be possible.
 #Plus i use Arch btw :x , i mean i used A.I btw :)
