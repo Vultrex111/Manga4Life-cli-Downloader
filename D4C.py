@@ -8,8 +8,11 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 
 class MangaDownloader:
-    def __init__(self, manga_name: str, uppercase: bool = False):
-        self.manga_name = manga_name.upper() if uppercase else manga_name.title()
+    def __init__(self, manga_name: str, uppercase: bool = False, edited: bool = False):
+        if edited:
+            self.manga_name = manga_name
+        else:
+            self.manga_name = manga_name.upper() if uppercase else manga_name.title()
         self.formatted_manga_name = re.sub(r'\s+', '-', self.manga_name)
         self.manga_folder = Path(self.formatted_manga_name)
         self.executor = ThreadPoolExecutor()
@@ -126,39 +129,42 @@ def parse_args():
     parser.add_argument('-c', '--chapters', metavar='CHAPTERS', type=str, help="Chapters to download, separated by commas")
     parser.add_argument('-H', '--history', action='store_true', help="View download history")
     parser.add_argument('-U', '--uppercase', action='store_true', help="Use uppercase for the manga name")
+    parser.add_argument('-e', '--edit', action='store_true', help="Edit manga name directly without formatting")
     return parser.parse_args()
 
 def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     args = parse_args()
 
-    if args.download and args.chapters:
-        manga_name = args.download
-        chapters_to_download = [chapter.strip() for chapter in args.chapters.split(",")]
-        downloader = MangaDownloader(manga_name, uppercase=args.uppercase)
-        asyncio.run(downloader.download_chapters(chapters_to_download))
-    elif args.download:
-        manga_name = args.download
-        chapters_to_download = input("Enter the chapter number(s) separated by commas: ").split(',')
-        chapters_to_download = [chapter.strip() for chapter in chapters_to_download]
-        downloader = MangaDownloader(manga_name, uppercase=args.uppercase)
-        asyncio.run(downloader.download_chapters(chapters_to_download))
-    elif args.history:
+    if args.history:
         downloader = MangaDownloader("dummy")
         asyncio.run(downloader.load_history())
+        return
+
+    if args.download:
+        manga_name = args.download
+        chapters_to_download = []
+
+        if args.chapters:
+            chapters_to_download = [chapter.strip() for chapter in args.chapters.split(",")]
+        else:
+            input_chapters = input("Enter the chapter number(s) separated by commas: ")
+            chapters_to_download = [chapter.strip() for chapter in input_chapters.split(",")]
+
+        downloader = MangaDownloader(manga_name, uppercase=args.uppercase, edited=args.edit)
+        asyncio.run(downloader.download_chapters(chapters_to_download))
     else:
-        downloader = None
         while True:
             choice = input("Enter 'd' to download manga, 'h' to view history, 'q' to quit: ").strip().lower()
             if choice == 'd':
                 manga_name = input("Enter the manga name: ")
                 input_chapters = input("Enter the chapter number(s) separated by commas: ")
                 chapters_to_download = [chapter.strip() for chapter in input_chapters.split(",")]
-                downloader = MangaDownloader(manga_name)
+                edited = input("Enter 'y' if you want to edit the manga name directly, otherwise press Enter: ").strip().lower() == 'y'
+                downloader = MangaDownloader(manga_name, uppercase=not edited, edited=edited)
                 asyncio.run(downloader.download_chapters(chapters_to_download))
             elif choice == 'h':
-                if downloader is None:
-                    downloader = MangaDownloader("dummy")
+                downloader = MangaDownloader("dummy")
                 asyncio.run(downloader.load_history())
             elif choice == 'q':
                 break
@@ -167,6 +173,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
- #Also if you're reading this in the future, Thanks :) for trying out my code. It took hardwork, dedication, and most importantly GOD for this to be possible.
-#Plus i use Arch btw :x , i mean i used A.I btw :)
