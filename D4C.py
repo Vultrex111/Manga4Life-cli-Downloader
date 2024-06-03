@@ -40,6 +40,9 @@ class MangaDownloader:
                         await file.write(await response.read())
                     logging.info(f"Downloaded: {url}")
                     return True
+                elif response.status == 404:
+                    logging.warning(f"Image not found (404): {url}")
+                    return False
                 else:
                     logging.warning(f"Failed to download {url}: {response.status}")
                     return False
@@ -54,23 +57,29 @@ class MangaDownloader:
 
     async def extract_text_from_url(self, session: aiohttp.ClientSession, chapter_number: str) -> str:
         formatted_chapter_number = self.format_chapter_number(chapter_number)
-        url = f"https://manga4life.com/read-online/{self.formatted_manga_name}-chapter-{formatted_chapter_number}.html"
-        try:
-            async with session.get(url) as response:
-                if response.status == 200:
-                    html_content = await response.text()
-                    manga_address = self.extract_text_from_html(html_content)
-                    if manga_address:
-                        await self.save_history(self.manga_name)
+        base_url = f"https://manga4life.com/read-online/{self.formatted_manga_name}-chapter-{formatted_chapter_number}"
+        urls = [
+            f"{base_url}.html",
+            f"{base_url}-index-2.html"
+        ]
+        for url in urls:
+            try:
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        html_content = await response.text()
+                        manga_address = self.extract_text_from_html(html_content)
+                        if manga_address:
+                            await self.save_history(self.manga_name)
+                            return manga_address
+                        else:
+                            logging.warning(f"Could not find 'vm.CurPathName' in the page for manga '{self.manga_name}' or chapter '{formatted_chapter_number}'.")
+                    elif response.status == 404:
+                        logging.error(f"Chapter not found (404): {url}")
                     else:
-                        logging.warning(f"Could not find 'vm.CurPathName' in the page for manga '{self.manga_name}' or chapter '{formatted_chapter_number}'.")
-                    return manga_address
-                else:
-                    logging.error(f"Error accessing {url}: HTTP {response.status}")
-                    return None
-        except aiohttp.ClientError as e:
-            logging.error(f"Error accessing {url}: {e}")
-            return None
+                        logging.error(f"Error accessing {url}: HTTP {response.status}")
+            except aiohttp.ClientError as e:
+                logging.error(f"Error accessing {url}: {e}")
+        return None
 
     async def download_chapter_images(self, session: aiohttp.ClientSession, chapter_number: str) -> bool:
         formatted_chapter_number = self.format_chapter_number(chapter_number)
