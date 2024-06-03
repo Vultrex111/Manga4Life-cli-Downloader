@@ -8,8 +8,8 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 
 class MangaDownloader:
-    def __init__(self, manga_name: str, uppercase: bool = False, edited: bool = False):
-        if edited:
+    def __init__(self, manga_name: str, uppercase: bool = False, edit: bool = False):
+        if edit:
             self.manga_name = manga_name
         else:
             self.manga_name = manga_name.upper() if uppercase else manga_name.title()
@@ -40,9 +40,6 @@ class MangaDownloader:
                         await file.write(await response.read())
                     logging.info(f"Downloaded: {url}")
                     return True
-                elif response.status == 404:
-                    logging.warning(f"Image not found (404): {url}")
-                    return False
                 else:
                     logging.warning(f"Failed to download {url}: {response.status}")
                     return False
@@ -57,29 +54,34 @@ class MangaDownloader:
 
     async def extract_text_from_url(self, session: aiohttp.ClientSession, chapter_number: str) -> str:
         formatted_chapter_number = self.format_chapter_number(chapter_number)
-        base_url = f"https://manga4life.com/read-online/{self.formatted_manga_name}-chapter-{formatted_chapter_number}"
-        urls = [
-            f"{base_url}.html",
-            f"{base_url}-index-2.html"
-        ]
-        for url in urls:
-            try:
-                async with session.get(url) as response:
-                    if response.status == 200:
-                        html_content = await response.text()
-                        manga_address = self.extract_text_from_html(html_content)
-                        if manga_address:
-                            await self.save_history(self.manga_name)
-                            return manga_address
-                        else:
-                            logging.warning(f"Could not find 'vm.CurPathName' in the page for manga '{self.manga_name}' or chapter '{formatted_chapter_number}'.")
-                    elif response.status == 404:
-                        logging.error(f"Chapter not found (404): {url}")
+        url = f"https://manga4life.com/read-online/{self.formatted_manga_name}-chapter-{formatted_chapter_number}.html"
+        try:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    html_content = await response.text()
+                    manga_address = self.extract_text_from_html(html_content)
+                    if manga_address:
+                        await self.save_history(self.manga_name)
                     else:
-                        logging.error(f"Error accessing {url}: HTTP {response.status}")
-            except aiohttp.ClientError as e:
-                logging.error(f"Error accessing {url}: {e}")
-        return None
+                        logging.warning(f"Could not find 'vm.CurPathName' in the page for manga '{self.manga_name}' or chapter '{formatted_chapter_number}'. Trying alternative URL.")
+                        url = f"https://manga4life.com/read-online/{self.formatted_manga_name}-chapter-{formatted_chapter_number}-index-2.html"
+                        async with session.get(url) as alt_response:
+                            if alt_response.status == 200:
+                                html_content = await alt_response.text()
+                                manga_address = self.extract_text_from_html(html_content)
+                                if manga_address:
+                                    await self.save_history(self.manga_name)
+                                else:
+                                    logging.warning(f"Alternative URL also failed for manga '{self.manga_name}' and chapter '{formatted_chapter_number}'.")
+                            else:
+                                logging.error(f"Error accessing alternative URL: HTTP {alt_response.status}")
+                    return manga_address
+                else:
+                    logging.error(f"Error accessing {url}: HTTP {response.status}")
+                    return None
+        except aiohttp.ClientError as e:
+            logging.error(f"Error accessing {url}: {e}")
+            return None
 
     async def download_chapter_images(self, session: aiohttp.ClientSession, chapter_number: str) -> bool:
         formatted_chapter_number = self.format_chapter_number(chapter_number)
@@ -145,35 +147,33 @@ def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     args = parse_args()
 
-    if args.history:
+    if args.download and args.chapters:
+        manga_name = args.download
+        chapters_to_download = [chapter.strip() for chapter in args.chapters.split(",")]
+        downloader = MangaDownloader(manga_name, uppercase=args.uppercase, edit=args.edit)
+        asyncio.run(downloader.download_chapters(chapters_to_download))
+    elif args.download:
+        manga_name = args.download
+        chapters_to_download = input("Enter the chapter number(s) separated by commas: ").split(',')
+        chapters_to_download = [chapter.strip() for chapter in chapters_to_download]
+        downloader = MangaDownloader(manga_name, uppercase=args.uppercase, edit=args.edit)
+        asyncio.run(downloader.download_chapters(chapters_to_download))
+    elif args.history:
         downloader = MangaDownloader("dummy")
         asyncio.run(downloader.load_history())
-        return
-
-    if args.download:
-        manga_name = args.download
-        chapters_to_download = []
-
-        if args.chapters:
-            chapters_to_download = [chapter.strip() for chapter in args.chapters.split(",")]
-        else:
-            input_chapters = input("Enter the chapter number(s) separated by commas: ")
-            chapters_to_download = [chapter.strip() for chapter in input_chapters.split(",")]
-
-        downloader = MangaDownloader(manga_name, uppercase=args.uppercase, edited=args.edit)
-        asyncio.run(downloader.download_chapters(chapters_to_download))
     else:
+        downloader = None
         while True:
             choice = input("Enter 'd' to download manga, 'h' to view history, 'q' to quit: ").strip().lower()
             if choice == 'd':
                 manga_name = input("Enter the manga name: ")
                 input_chapters = input("Enter the chapter number(s) separated by commas: ")
                 chapters_to_download = [chapter.strip() for chapter in input_chapters.split(",")]
-                edited = input("Enter 'y' if you want to edit the manga name directly, otherwise press Enter: ").strip().lower() == 'y'
-                downloader = MangaDownloader(manga_name, uppercase=not edited, edited=edited)
+                downloader = MangaDownloader(manga_name)
                 asyncio.run(downloader.download_chapters(chapters_to_download))
             elif choice == 'h':
-                downloader = MangaDownloader("dummy")
+                if downloader is None:
+                    downloader = MangaDownloader("dummy")
                 asyncio.run(downloader.load_history())
             elif choice == 'q':
                 break
