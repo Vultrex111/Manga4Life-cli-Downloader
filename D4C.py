@@ -60,18 +60,14 @@ class MangaDownloader:
                 if response.status == 200:
                     html_content = await response.text()
                     manga_address = self.extract_text_from_html(html_content)
-                    if manga_address:
-                        await self.save_history(self.manga_name)
-                    else:
+                    if not manga_address:
                         logging.warning(f"Could not find 'vm.CurPathName' in the page for manga '{self.manga_name}' or chapter '{formatted_chapter_number}'. Trying alternative URL.")
                         url = f"https://manga4life.com/read-online/{self.formatted_manga_name}-chapter-{formatted_chapter_number}-index-2.html"
                         async with session.get(url) as alt_response:
                             if alt_response.status == 200:
                                 html_content = await alt_response.text()
                                 manga_address = self.extract_text_from_html(html_content)
-                                if manga_address:
-                                    await self.save_history(self.manga_name)
-                                else:
+                                if not manga_address:
                                     logging.warning(f"Alternative URL also failed for manga '{self.manga_name}' and chapter '{formatted_chapter_number}'.")
                             else:
                                 logging.error(f"Error accessing alternative URL: HTTP {alt_response.status}")
@@ -111,6 +107,7 @@ class MangaDownloader:
                     tasks = []
             if tasks:
                 await asyncio.gather(*tasks)
+        await self.save_history(self.manga_name)
 
     async def save_history(self, manga_name: str):
         if not self.history_file.exists():
@@ -134,6 +131,16 @@ class MangaDownloader:
         else:
             logging.info("No download history found.")
 
+def parse_chapters(chapters_str):
+    chapters = []
+    for part in chapters_str.split(','):
+        if '-' in part:
+            start, end = map(int, part.split('-'))
+            chapters.extend(range(start, end + 1))
+        else:
+            chapters.append(int(part))
+    return [str(chapter) for chapter in chapters]
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Manga Downloader")
     parser.add_argument('-d', '--download', metavar='MANGA_NAME', type=str, help="Download manga chapters")
@@ -149,13 +156,13 @@ def main():
 
     if args.download and args.chapters:
         manga_name = args.download
-        chapters_to_download = [chapter.strip() for chapter in args.chapters.split(",")]
+        chapters_to_download = parse_chapters(args.chapters)
         downloader = MangaDownloader(manga_name, uppercase=args.uppercase, edit=args.edit)
         asyncio.run(downloader.download_chapters(chapters_to_download))
     elif args.download:
         manga_name = args.download
-        chapters_to_download = input("Enter the chapter number(s) separated by commas: ").split(',')
-        chapters_to_download = [chapter.strip() for chapter in chapters_to_download]
+        input_chapters = input("Enter the chapter number(s) separated by commas or ranges: ")
+        chapters_to_download = parse_chapters(input_chapters)
         downloader = MangaDownloader(manga_name, uppercase=args.uppercase, edit=args.edit)
         asyncio.run(downloader.download_chapters(chapters_to_download))
     elif args.history:
@@ -167,8 +174,8 @@ def main():
             choice = input("Enter 'd' to download manga, 'h' to view history, 'q' to quit: ").strip().lower()
             if choice == 'd':
                 manga_name = input("Enter the manga name: ")
-                input_chapters = input("Enter the chapter number(s) separated by commas: ")
-                chapters_to_download = [chapter.strip() for chapter in input_chapters.split(",")]
+                input_chapters = input("Enter the chapter number(s) separated by commas or ranges: ")
+                chapters_to_download = parse_chapters(input_chapters)
                 downloader = MangaDownloader(manga_name)
                 asyncio.run(downloader.download_chapters(chapters_to_download))
             elif choice == 'h':
